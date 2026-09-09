@@ -1,0 +1,52 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  identityserver:
+    build:
+      context: .
+      dockerfile: src/Bookstore.IdentityServer/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      IdentityServer__IssuerUri: "http://localhost:5001"
+    ports:
+      - "5001:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/.well-known/openid-configuration"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Bookstore.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__BookstoreDb: "Server=sqlserver,1433;Database=Bookstore;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      IdentityServer__Authority: "http://identityserver:8080"
+      IdentityServer__ValidIssuer: "http://localhost:5001"
+    ports:
+      - "5000:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      identityserver:
+        condition: service_healthy
+
+volumes:
+  sqlserver-data:

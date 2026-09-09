@@ -1,0 +1,19 @@
+@page
+@model Bookstore.IdentityServer.Pages.Account.LoginModel
+<!DOCTYPE html>
+<html>
+<head><title>Bookstore IdentityServer - Login</title></head>
+<body>
+    <h1>Login</h1>
+    @if (Model.ErrorMessage is not null)
+    {
+        <p style="color:red">@Model.ErrorMessage</p>
+    }
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div><label>Username: <input asp-for="Username" /></label></div>
+        <div><label>Password: <input asp-for="Password" type="password" /></label></div>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
