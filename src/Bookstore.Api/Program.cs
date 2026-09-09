@@ -29,6 +29,9 @@ if (string.IsNullOrEmpty(connectionStringBuilder.UserID))
 
 var connectionString = connectionStringBuilder.ConnectionString;
 
+var identityServerPublicUrl = builder.Configuration["IdentityServer:ValidIssuer"]
+    ?? throw new InvalidOperationException("Missing configuration 'IdentityServer:ValidIssuer'.");
+
 // Add services to the container.
 
 builder.Services.AddDbContext<BookstoreDbContext>(options => options.UseSqlServer(connectionString));
@@ -48,12 +51,12 @@ builder.Services.AddSwaggerGen(options =>
         {
             ClientCredentials = new OpenApiOAuthFlow
             {
-                TokenUrl = new Uri("http://localhost:5001/connect/token"),
+                TokenUrl = new Uri($"{identityServerPublicUrl}/connect/token"),
                 Scopes = new Dictionary<string, string> { [ApiScopes.Crud] = "Book CRUD operations" }
             },
             Implicit = new OpenApiOAuthFlow
             {
-                AuthorizationUrl = new Uri("http://localhost:5001/connect/authorize"),
+                AuthorizationUrl = new Uri($"{identityServerPublicUrl}/connect/authorize"),
                 Scopes = new Dictionary<string, string>
                 {
                     [ApiScopes.Search] = "Book search"

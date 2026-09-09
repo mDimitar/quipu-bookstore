@@ -28,7 +28,7 @@ public static class Config
             }
         };
 
-    public static IEnumerable<Client> ClientDefinitions =>
+    public static IEnumerable<Client> GetClientDefinitions(string searchClientRedirectUri) =>
         new Client[]
         {
             new()
@@ -43,7 +43,7 @@ public static class Config
                 ClientId = "bookstore.search.client",
                 AllowedGrantTypes = GrantTypes.Implicit,
                 AllowAccessTokensViaBrowser = true,
-                RedirectUris = { "http://localhost:5000/swagger/oauth2-redirect.html" },
+                RedirectUris = { searchClientRedirectUri },
                 AllowedScopes = { "openid", "profile", ApiScopes.Search },
                 RequireConsent = false
             }

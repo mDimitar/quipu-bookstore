@@ -16,7 +16,18 @@ Create a `.env` file at the repo root (gitignored — never committed) with:
 ```
 DB_USER=sa
 SA_PASSWORD=<pick your own local dev password>
+PUBLIC_IDENTITYSERVER_URL=http://localhost:5001
+PUBLIC_API_URL=http://localhost:5000
 ```
+
+The two `PUBLIC_*` values are whatever address a **browser** can actually
+reach IdentityServer/the API at — `localhost` for local dev, but on a real
+deployment they must be the real host/IP (e.g.
+`http://203.0.113.10:5001`/`http://203.0.113.10:5000`), never an internal
+Docker service name. They control Swagger's OAuth2 URLs and IdentityServer's
+issuer/redirect-URI, all of which are read by the browser or checked against
+what the browser sends — a value only reachable from inside the Docker
+network breaks the login flow.
 
 Then:
 
@@ -71,5 +82,5 @@ this is a one-time, IDE-driven step and isn't scripted here.
 
 ## Out of scope
 
-GitHub Actions CI/CD, container registry publishing, and VPS deployment are
-covered by a separate design once this backend is verified working locally.
+Container registry publishing (images are built directly on the deploy
+target, not pushed to a registry).

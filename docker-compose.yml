@@ -21,7 +21,8 @@ services:
       dockerfile: src/Bookstore.IdentityServer/Dockerfile
     environment:
       ASPNETCORE_URLS: "http://+:8080"
-      IdentityServer__IssuerUri: "http://localhost:5001"
+      IdentityServer__IssuerUri: "${PUBLIC_IDENTITYSERVER_URL}"
+      Clients__SearchRedirectUri: "${PUBLIC_API_URL}/swagger/oauth2-redirect.html"
     ports:
       - "5001:8080"
     healthcheck:
@@ -39,7 +40,7 @@ services:
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__BookstoreDb: "Server=sqlserver,1433;Database=Bookstore;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
       IdentityServer__Authority: "http://identityserver:8080"
-      IdentityServer__ValidIssuer: "http://localhost:5001"
+      IdentityServer__ValidIssuer: "${PUBLIC_IDENTITYSERVER_URL}"
     ports:
       - "5000:8080"
     depends_on:
