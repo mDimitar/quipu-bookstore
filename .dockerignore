@@ -3,5 +3,5 @@ obj/
 .git/
 .vs/
 *.user
-.env
+.env*
 **/keys/

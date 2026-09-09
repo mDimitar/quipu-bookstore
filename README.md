@@ -2,8 +2,7 @@
 
 .NET 8 backend for a bookstore: Book CRUD (OAuth2 client-credentials flow) and
 paginated book search (OAuth2 implicit flow, restricted to the `ProCredit`
-claimed group). See `docs/superpowers/specs/2026-09-09-bookstore-backend-design.md`
-for the full design.
+claimed group).
 
 ## Prerequisites
 
@@ -12,8 +11,16 @@ for the full design.
 
 ## Running the full stack
 
+Create a `.env` file at the repo root (gitignored — never committed) with:
+
+```
+DB_USER=sa
+SA_PASSWORD=<pick your own local dev password>
+```
+
+Then:
+
 ```bash
-cp .env.example .env
 docker compose up --build
 ```
 
@@ -37,6 +44,19 @@ In Swagger's **Authorize** dialog, enter the relevant client ID (and secret,
 for the CRUD flow) into its corresponding flow section, then check the scope
 and authorize.
 
+## Running the API without Docker
+
+`appsettings.json` never contains DB credentials — the API reads them from the
+`.env` file described above, the same one the Docker Compose stack uses. Make
+sure it exists, start a SQL Server container on `localhost:1433` (e.g.
+`docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<value from .env>" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest`
+if you need one), then:
+
+```bash
+dotnet run --project src/Bookstore.IdentityServer/Bookstore.IdentityServer.csproj
+dotnet run --project src/Bookstore.Api/Bookstore.Api.csproj
+```
+
 ## Running tests
 
 ```bash
@@ -49,7 +69,7 @@ Add **Container Orchestrator Support → Docker Compose** to the solution
 (right-click `Bookstore.sln` → Add) to make the compose stack the F5 target —
 this is a one-time, IDE-driven step and isn't scripted here.
 
-## Out of scope (see spec §10)
+## Out of scope
 
 GitHub Actions CI/CD, container registry publishing, and VPS deployment are
 covered by a separate design once this backend is verified working locally.

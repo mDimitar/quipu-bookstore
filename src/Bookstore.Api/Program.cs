@@ -4,13 +4,30 @@ using Bookstore.Api.Services;
 using Bookstore.Shared.Security;
 using DbUp;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("BookstoreDb")
-    ?? throw new InvalidOperationException("Missing connection string 'BookstoreDb'.");
+// appsettings.json's connection string deliberately omits the DB credentials — they come from
+// the repo-root .env file (local `dotnet run`) or, in Docker, from docker-compose's own
+// ConnectionStrings__BookstoreDb override (which already includes them, making this a no-op).
+LoadDotEnvIfPresent(Path.Combine(builder.Environment.ContentRootPath, "..", "..", ".env"));
+
+var connectionStringBuilder = new SqlConnectionStringBuilder(
+    builder.Configuration.GetConnectionString("BookstoreDb")
+    ?? throw new InvalidOperationException("Missing connection string 'BookstoreDb'."));
+
+if (string.IsNullOrEmpty(connectionStringBuilder.UserID))
+{
+    connectionStringBuilder.UserID = Environment.GetEnvironmentVariable("DB_USER")
+        ?? throw new InvalidOperationException("Missing DB_USER environment variable — check .env exists at the repo root (cp .env.example .env).");
+    connectionStringBuilder.Password = Environment.GetEnvironmentVariable("SA_PASSWORD")
+        ?? throw new InvalidOperationException("Missing SA_PASSWORD environment variable — check .env exists at the repo root (cp .env.example .env).");
+}
+
+var connectionString = connectionStringBuilder.ConnectionString;
 
 // Add services to the container.
 
@@ -103,6 +120,27 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void LoadDotEnvIfPresent(string path)
+{
+    if (!File.Exists(path)) return;
+
+    foreach (var line in File.ReadAllLines(path))
+    {
+        var trimmed = line.Trim();
+        if (trimmed.Length == 0 || trimmed.StartsWith('#')) continue;
+
+        var separatorIndex = trimmed.IndexOf('=');
+        if (separatorIndex < 0) continue;
+
+        var key = trimmed[..separatorIndex].Trim();
+        var value = trimmed[(separatorIndex + 1)..].Trim();
+
+        // A real environment variable (e.g. set by a CI runner) always wins over .env.
+        if (Environment.GetEnvironmentVariable(key) is null)
+            Environment.SetEnvironmentVariable(key, value);
+    }
+}
 
 static void ApplyDatabaseMigrations(string connectionString)
 {
