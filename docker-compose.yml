@@ -16,6 +16,7 @@ services:
       - sqlserver-data:/var/opt/mssql
 
   identityserver:
+    image: ghcr.io/mdimitar/quipu-bookstore-identityserver:latest
     build:
       context: .
       dockerfile: src/Bookstore.IdentityServer/Dockerfile
@@ -32,6 +33,7 @@ services:
       retries: 10
 
   api:
+    image: ghcr.io/mdimitar/quipu-bookstore-api:latest
     build:
       context: .
       dockerfile: src/Bookstore.Api/Dockerfile

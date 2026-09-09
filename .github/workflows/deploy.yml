@@ -18,8 +18,39 @@ jobs:
       - run: dotnet build Bookstore.sln --no-restore
       - run: dotnet test tests/Bookstore.Api.Tests/Bookstore.Api.Tests.csproj --no-build
 
-  deploy:
+  build-and-push:
     needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          file: src/Bookstore.Api/Dockerfile
+          push: true
+          tags: ghcr.io/mdimitar/quipu-bookstore-api:latest
+
+      - name: Build and push IdentityServer image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          file: src/Bookstore.IdentityServer/Dockerfile
+          push: true
+          tags: ghcr.io/mdimitar/quipu-bookstore-identityserver:latest
+
+  deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH
@@ -31,5 +62,7 @@ jobs:
           script: |
             cd ${{ secrets.VPS_APP_DIR }}
             git pull origin main
-            docker compose up --build -d
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull api identityserver
+            docker compose up -d
             docker image prune -f
