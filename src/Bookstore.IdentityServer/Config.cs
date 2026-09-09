@@ -28,7 +28,7 @@ public static class Config
             }
         };
 
-    public static IEnumerable<Client> GetClientDefinitions(string searchClientRedirectUri) =>
+    public static IEnumerable<Client> GetClientDefinitions(string searchClientRedirectUri, string swaggerOrigin) =>
         new Client[]
         {
             new()
@@ -36,7 +36,8 @@ public static class Config
                 ClientId = "bookstore.crud.client",
                 ClientSecrets = { new Secret("dev-secret".Sha256()) },
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                AllowedScopes = { ApiScopes.Crud }
+                AllowedScopes = { ApiScopes.Crud },
+                AllowedCorsOrigins = { swaggerOrigin }
             },
             new()
             {
@@ -45,7 +46,8 @@ public static class Config
                 AllowAccessTokensViaBrowser = true,
                 RedirectUris = { searchClientRedirectUri },
                 AllowedScopes = { "openid", "profile", ApiScopes.Search },
-                RequireConsent = false
+                RequireConsent = false,
+                AllowedCorsOrigins = { swaggerOrigin }
             }
         };
 }

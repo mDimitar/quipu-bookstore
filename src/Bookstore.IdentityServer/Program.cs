@@ -2,6 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var searchClientRedirectUri = builder.Configuration["Clients:SearchRedirectUri"]
     ?? throw new InvalidOperationException("Missing configuration 'Clients:SearchRedirectUri'.");
+var swaggerOrigin = new Uri(searchClientRedirectUri).GetLeftPart(UriPartial.Authority);
 
 builder.Services.AddRazorPages();
 
@@ -12,7 +13,7 @@ builder.Services.AddIdentityServer(options =>
     .AddInMemoryIdentityResources(Bookstore.IdentityServer.Config.IdentityResourceDefinitions)
     .AddInMemoryApiScopes(Bookstore.IdentityServer.Config.ApiScopeDefinitions)
     .AddInMemoryApiResources(Bookstore.IdentityServer.Config.ApiResourceDefinitions)
-    .AddInMemoryClients(Bookstore.IdentityServer.Config.GetClientDefinitions(searchClientRedirectUri))
+    .AddInMemoryClients(Bookstore.IdentityServer.Config.GetClientDefinitions(searchClientRedirectUri, swaggerOrigin))
     .AddTestUsers(Bookstore.IdentityServer.TestUsers.Users);
 
 var app = builder.Build();
