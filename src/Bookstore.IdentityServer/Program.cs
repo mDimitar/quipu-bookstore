@@ -6,6 +6,12 @@ var swaggerOrigin = new Uri(searchClientRedirectUri).GetLeftPart(UriPartial.Auth
 
 builder.Services.AddRazorPages();
 
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.OnAppendCookie = cookieContext => DowngradeSameSiteIfNotHttps(cookieContext.Context, cookieContext.CookieOptions);
+    options.OnDeleteCookie = cookieContext => DowngradeSameSiteIfNotHttps(cookieContext.Context, cookieContext.CookieOptions);
+});
+
 builder.Services.AddIdentityServer(options =>
     {
         builder.Configuration.GetSection("IdentityServer").Bind(options);
@@ -20,7 +26,16 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCookiePolicy();
 app.UseIdentityServer();
 app.MapRazorPages();
 
 app.Run();
+
+static void DowngradeSameSiteIfNotHttps(HttpContext httpContext, CookieOptions options)
+{
+    if (options.SameSite == SameSiteMode.None && !httpContext.Request.IsHttps)
+    {
+        options.SameSite = SameSiteMode.Unspecified;
+    }
+}
