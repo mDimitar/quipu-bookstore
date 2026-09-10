@@ -4,6 +4,24 @@
 paginated book search (OAuth2 implicit flow, restricted to the `ProCredit`
 claimed group).
 
+## Live deployment
+
+The full stack runs on a VPS at `http://109.199.122.254`:
+- Swagger UI: http://109.199.122.254/swagger (nginx reverse-proxies port 80 to the API container)
+- IdentityServer discovery document: http://109.199.122.254:5001/.well-known/openid-configuration
+
+Testing works the same as local dev — open Swagger, click **Authorize**, and
+use the client-credentials flow for CRUD or the implicit flow for search (see
+[Test credentials](#test-credentials) below for the exact values). One
+difference: IdentityServer's session cookie persists correctly once you log
+in, so switching from `alice` to `bob` to compare their search access
+requires an incognito/private window or clearing cookies first — there's no
+logout page in this project yet.
+
+Any push to `main` auto-deploys here: a GitHub Actions pipeline runs the test
+suite, builds and pushes both app images to GHCR, then SSHes into the VPS to
+pull and restart the stack (`.github/workflows/deploy.yml`).
+
 ## Prerequisites
 
 - .NET 8 SDK
@@ -82,5 +100,6 @@ this is a one-time, IDE-driven step and isn't scripted here.
 
 ## Out of scope
 
-Container registry publishing (images are built directly on the deploy
-target, not pushed to a registry).
+HTTPS/TLS for the live deployment (it's a bare IP address, not a domain, so
+Let's Encrypt can't issue a certificate for it) and a proper logout page for
+switching test users without clearing cookies.
